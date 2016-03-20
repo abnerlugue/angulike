@@ -44,7 +44,54 @@
                               });
                               return;
                           } else {
-                              element.html('<div class="fb-like"' + (!!scope.fbLike ? ' data-href="' + scope.fbLike + '"' : '') + ' data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></div>');
+                              element.html('<div class="fb-like"' + (!!scope.fbLike ? ' data-href="' + encodeURIComponent(scope.fbLike) + '"' : '') + ' data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></div>');
+                              $window.FB.XFBML.parse(element.parent()[0]);
+                          }
+                      }
+                  }
+              };
+          }
+      ])
+
+      .directive('fbShare', [
+          '$window', '$rootScope', function ($window, $rootScope) {
+              return {
+                  restrict: 'A',
+                  scope: {
+                      fbShare: '=?'
+                  },
+                  link: function (scope, element, attrs) {
+                      if (!$window.FB) {
+                          // Load Facebook SDK if not already loaded
+                          $.getScript('//connect.facebook.net/en_US/sdk.js', function () {
+                              $window.FB.init({
+                                  appId: $rootScope.facebookAppId,
+                                  xfbml: true,
+                                  version: 'v2.0'
+                              });
+                              renderShareButton();
+                          });
+                      } else {
+                          renderShareButton();
+                      }
+
+                      var watchAdded = false;
+                      function renderShareButton() {
+                          if (!!attrs.fbShare && !scope.fbShare && !watchAdded) {
+                              // wait for data if it hasn't loaded yet
+                              watchAdded = true;
+                              var unbindWatch = scope.$watch('fbShare', function (newValue, oldValue) {
+                                  if (newValue) {
+                                      renderLikeButton();
+                                      
+                                      // only need to run once
+                                      unbindWatch();
+                                  }
+                                  
+                              });
+                              return;
+                          } else {
+                              element.html('<div class="fb-share-button"' + (!!scope.fbShare ? ' data-href="' + encodeURIComponent(scope.fbShare) + '"' : '') + ' data-layout="button_count"></div>');
                               $window.FB.XFBML.parse(element.parent()[0]);
                           }
                       }
@@ -86,7 +133,7 @@
                               });
                               return;
                           } else {
-                              element.html('<div class="g-plusone"' + (!!scope.googlePlus ? ' data-href="' + scope.googlePlus + '"' : '') + ' data-size="medium"></div>');
+                              element.html('<div class="g-plusone"' + (!!scope.googlePlus ? ' data-href="' + encodeURIComponent(scope.googlePlus) + '"' : '') + ' data-size="medium"></div>');
                               $window.gapi.plusone.go(element.parent()[0]);
                           }
                       }
@@ -155,6 +202,7 @@
                               var f = d.getElementsByTagName('SCRIPT')[0], p = d.createElement('SCRIPT');
                               p.type = 'text/javascript';
                               p.async = true;
+                              p.defer = true;
                               p.src = '//assets.pinterest.com/js/pinit.js';
                               p['data-pin-build'] = 'parsePins';
                               p.onload = function () {
@@ -185,7 +233,7 @@
                               });
                               return;
                           } else {
-                              element.html('<a href="//www.pinterest.com/pin/create/button/?url=' + (scope.pinItUrl || $location.absUrl()) + '&media=' + scope.pinItImage + '&description=' + scope.pinIt + '" data-pin-do="buttonPin" data-pin-config="beside"></a>');
+                              element.html('<a href="//www.pinterest.com/pin/create/button/?url=' + encodeURIComponent(scope.pinItUrl || $location.absUrl()) + '&media=' + encodeURIComponent(scope.pinItImage) + '&description=' + encodeURIComponent(scope.pinIt) + '" data-pin-do="buttonPin" data-pin-config="beside"></a>');
                               $window.parsePins(element.parent()[0]);
                           }
                       }
